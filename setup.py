@@ -14,6 +14,12 @@ setup(
     description="Attempt to fix common errors in OCR-scanned text.",
     keywords="epub ocr",
     long_description=open('README.md').read(),
+    install_requires=[
+        'beautifulsoup4',
+        'lxml',
+        'mypy',
+        'parameterized'
+    ],
     entry_points={
         'console_scripts': ['text-cleanup = text_cleanup:main'],
     },
@@ -21,6 +27,6 @@ setup(
         "Development Status :: 3 - Alpha",
         "License :: OSI Approved :: "
         "GNU General Public License v3 or later (GPLv3+)",
-        "Topic :: Utilities",  # FIXME
+        "Topic :: Text Processing :: Linguistic",
     ],
 )

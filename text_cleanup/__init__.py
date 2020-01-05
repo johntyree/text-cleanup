@@ -24,7 +24,7 @@ NUMBER_RE = re.compile(NUMBER_PATTERN)
 # group when making corrections.
 ERROR_GROUPS = (
     'jli!1t',
-    'bdcqeo0@',
+    'aceo',
     '3B',
     'hmn',
     'yug',
@@ -46,7 +46,7 @@ def get_valid_words() -> Set[str]:
     """Return set of valid words."""
     with open('words') as fin:
         words = fin.read().splitlines()
-    valid = set()
+    valid: Set[str] = set()
     # Remove one-letter words that aren't 'a', 'A' or 'I'.
     valid.update(w for w in words if len(w) > 1 or w in 'aAI')
     # Allow any word to be capitalized, since it might start a sentence.
@@ -69,21 +69,21 @@ def spellcheck(wordstr: str) -> bool:
 
 def one_error(word: str) -> Iterable[str]:
     """Yield one-error variations on word."""
-    lower = alpha = string.ascii_lowercase
-    upper = string.ascii_uppercase
-
     # Missing spaces seems most common, so check all possible splits first
     for i in range(1, len(word)):
         yield word[:i] + ' ' + word[i:]
 
+    # Check for any preferred errors before trying brute force substitution
     for i, letter in enumerate(word):
-        # Change current letter
-        # First check preferred errors
         for newchar in PREFERRED_ERRORS.get(letter, ''):
             if newchar != letter:
                 yield word[:i] + newchar + word[i+1:]
 
-        # Then try entire alphabet
+    # No luck... time to brute force
+    lower = alpha = string.ascii_lowercase
+    upper = string.ascii_uppercase
+    for i, letter in enumerate(word):
+        # Change letter by trying entire alphabet
         alpha = lower if 'a' <= letter <= 'z' else upper
         for newchar in alpha:
             if newchar != letter:
@@ -141,6 +141,9 @@ def correct_misspelling(given: str, errors=2) -> Tuple[bool, str]:
 
 def cleanup(given: str) -> str:
     """Return a corrected version of given text."""
+    # Re-wrapped text can rejoin lines broken at hyphens, but then you have
+    # extra spaces in there, e.g. "mini- mize"
+    given = given.replace('- ', '-')
     def silent_fix(wordmatch):
         return correct_misspelling(wordmatch.group())[1]
     return TOKEN_RE.sub(silent_fix, given)

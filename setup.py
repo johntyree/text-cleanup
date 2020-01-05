@@ -21,7 +21,7 @@ setup(
         'parameterized'
     ],
     entry_points={
-        'console_scripts': ['text-cleanup = text_cleanup:main'],
+        'console_scripts': ['text-cleanup = text_cleanup.main:main'],
     },
     classifiers=[
         "Development Status :: 3 - Alpha",

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # type: ignore
-# pylint: disable=missing-docstring
+# pylint: disable=missing-docstring,invalid-name
 """Test xml cleaning code."""
 
 import unittest
-from bs4 import BeautifulSoup
 
-from text_cleanup import xml as XML
+from text_cleanup import XML
 
 
 class TestXMLHandling(unittest.TestCase):

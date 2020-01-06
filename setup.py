@@ -18,7 +18,8 @@ setup(
         'beautifulsoup4',
         'lxml',
         'mypy',
-        'parameterized'
+        'parameterized',
+        'progressbar2',
     ],
     entry_points={
         'console_scripts': ['text-cleanup = text_cleanup.main:main'],

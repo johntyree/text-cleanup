@@ -4,6 +4,7 @@
 
 import sys
 import argparse
+import progressbar
 
 from text_cleanup import raw, XML
 
@@ -37,9 +38,13 @@ def main(argv=None):
     if args.xml:
         xml = args.input.read()
         if args.reformat_only:
-            output = XML.reformat(xml, args.selector)
+            output = XML.reformat(xml)
         else:
-            output = XML.clean_element(reformatted, args.selector)
+            def make_bar(items):
+                return progressbar.progressbar(items)
+            output = XML.clean_element(
+                xml, args.selector, progress_iterator=make_bar,
+            )
     else:
         text = args.input.read()
         output = raw.cleanup(text)

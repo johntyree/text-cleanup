@@ -31,8 +31,8 @@ class TestXMLHandling(unittest.TestCase):
         """.strip())
 
     def test_simple_cleanup(self):
-        xml = "<div>Balogna</div>"
-        expected = xml.replace("Balogna", "Bologna")
+        xml      = "<div>brlls</div>"  # pylint: disable=bad-whitespace
+        expected = "<div>balls</div>"
         result = XML.clean_element(xml, 'div')
         self.assertEqual(result, expected)
 
@@ -44,13 +44,13 @@ class TestXMLHandling(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_dont_touch_attribute_values(self):
-        xml      = '<div class="bal1s">Bal1s.</div>'
-        expected = '<div class="bal1s">Balls.</div>'
+        xml      = '<div class="bal1s">bal1s.</div>'  # pylint: disable=bad-whitespace
+        expected = '<div class="bal1s">balls.</div>'
         result = XML.clean_element(xml)
         self.assertEqual(result, expected)
 
     def test_only_fix_selected(self):
-        xml      = '<div class="bal1s">Bal1s.</div><div>Bal1s</div>'
+        xml      = '<div class="bal1s">Bal1s.</div><div>Bal1s</div>'  # pylint: disable=bad-whitespace
         expected = '<div class="bal1s">Balls.</div><div>Bal1s</div>'
         result = XML.clean_element(xml, selector='.bal1s')
         self.assertEqual(result, expected)

@@ -51,21 +51,44 @@ WORDS = get_valid_words()
 def spellcheck(wordstr: str) -> bool:
     """Return true if wordstr is made of valid words, else False."""
     quick = (
+        not wordstr or
         wordstr.endswith('-') or
         parse.NUMBER_RE.fullmatch(wordstr) or
         wordstr in WORDS)
     if quick:
         return True
-    new = wordstr.replace('-', ' ').split()
-    return new[0] != wordstr and all(map(spellcheck, new))
+
+    hyphenated = wordstr.replace('-', ' ').split()
+    return hyphenated[0] != wordstr and all(map(spellcheck, hyphenated))
 
 
-def one_error(word: str) -> Iterable[str]:
-    """Yield one-error variations on word."""
-    # Missing spaces seems most common, so check all possible splits first
+def one_space(word: str) -> Iterable[str]:
+    """Yield words made by inserting a single space into word."""
     for i in range(1, len(word)):
         yield word[:i] + ' ' + word[i:]
 
+
+def one_deletion(word: str) -> Iterable[str]:
+    """Yield words made by deleting a single letter from word."""
+    for i, letter in enumerate(word):
+        yield word[:i] + word[i+1:]
+
+
+def one_insertion(word: str) -> Iterable[str]:
+    """Yield words made by inserting a single letter into word."""
+    alphabet = string.ascii_lowercase
+    # Add letter before current letter
+    for i in range(len(word)):
+        for newchar in alphabet:
+            yield word[:i] + newchar + word[i:]
+
+    # Add letter at end
+    for newchar in alphabet:
+        yield word + newchar
+
+
+def one_substitution(word: str) -> Iterable[str]:
+    """Yield words made by substituting a single letter in word."""
     # Check for any preferred errors before trying brute force substitution
     for i, letter in enumerate(word):
         for newchar in PREFERRED_ERRORS.get(letter, ''):
@@ -73,34 +96,63 @@ def one_error(word: str) -> Iterable[str]:
                 yield word[:i] + newchar + word[i+1:]
 
     # No luck... time to brute force
-    lower = alpha = string.ascii_lowercase
-    upper = string.ascii_uppercase
+    alphabet = string.ascii_lowercase
     for i, letter in enumerate(word):
         # Change letter by trying entire alphabet
-        alpha = lower if 'a' <= letter <= 'z' else upper
-        for newchar in alpha:
+        for newchar in alphabet:
             if newchar != letter:
                 yield word[:i] + newchar + word[i+1:]
 
-        # Remove current letter
-        yield word[:i] + word[i+1:]
-
-        # Add letter before current letter
-        for newchar in alpha:
-            yield word[:i] + newchar + word[i:]
-
-    # Add letter at end (reuse final upper vs lower preference)
-    for newchar in alpha:
-        yield word + newchar
 
 
-def correct_misspelling(given: str, errors=2) -> Tuple[bool, str]:
+def one_error(word: str,
+              space: bool = True,
+              substitution: bool = True,
+              insertion: bool = True,
+              deletion: bool = True) -> Iterable[str]:
+    """Yield one-error variations on word."""
+
+    # Rewrapping text can leave unnecesarry hyphenations like 'mini-mize'
+    unhyphenated = word.replace('-', '')
+    if unhyphenated != word:
+        yield unhyphenated
+
+    # Missing spaces seems most common, so check all possible splits first
+    if space:
+        yield from one_space(word)
+    if substitution:
+        yield from one_substitution(word)
+    if deletion:
+        yield from one_deletion(word)
+    if insertion:
+        yield from one_insertion(word)
+
+
+def correct_misspelling(given: str,
+                        errors=2,
+                        space=True,
+                        avoid_capitalized_words=False,
+                        **kwargs) -> Tuple[bool, str]:
     """Return (bool, guess), True when guess is a known good word."""
+    first_letter = given[0]
+    rest = given[1:]
+
+    # If it starts with 'I' or 'A', split it if the result is valid.
+    if rest and space and first_letter in 'IA' and spellcheck(rest):
+        return True, f'{first_letter} {rest}'
+
+    # Ignore other words starting with capital letters
+    if avoid_capitalized_words:
+        if first_letter.isupper():
+            return True, given
+
     if spellcheck(given):
         return True, given
 
-    func: Callable[[Iterator[str]], Iterator[str]]
-    func = functools.partial(utils.flatmap, one_error)  # type: ignore
+    # Lazily generate all possible corrections, retuning the first good one.
+    def func(words):
+        for word in words:
+            yield from one_error(word, space=space, **kwargs)
     result_iter = utils.iterate(func, iter([given]), errors)
     candidates: Iterable[str] = itertools.chain.from_iterable(result_iter)
     for word in candidates:
@@ -109,11 +161,11 @@ def correct_misspelling(given: str, errors=2) -> Tuple[bool, str]:
     return False, given
 
 
-def cleanup(given: str) -> str:
+def cleanup(given: str, **kwargs) -> str:
     """Return a corrected version of given text."""
     # Re-wrapped text can rejoin lines broken at hyphens, but then you have
     # extra spaces in there, e.g. "mini- mize"
     given = given.replace('- ', '-')
     def silent_fix(wordmatch):
-        return correct_misspelling(wordmatch.group())[1]
+        return correct_misspelling(wordmatch.group(), **kwargs)[1]
     return parse.TOKEN_RE.sub(silent_fix, given)

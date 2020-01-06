@@ -22,6 +22,8 @@ def main(argv=None):
         '--selector', '-s',
         help="Only clean elements mathching this CSS selector. Implies --xml.")
     parser.add_argument('--xml', action='store_true', help="Assume XML input.")
+    parser.add_argument('--num_processes', '-n', metavar='N',
+                        help="Utilize N processes.", type=int, default=1)
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         '--reformat-only', action='store_true',
@@ -44,6 +46,7 @@ def main(argv=None):
                 return progressbar.progressbar(items)
             output = XML.clean_element(
                 xml, args.selector, progress_iterator=make_bar,
+                num_processes=args.num_processes,
             )
     else:
         text = args.input.read()

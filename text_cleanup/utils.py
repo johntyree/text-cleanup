@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Utility functions."""
+
 import itertools
 
-from typing import Any, Tuple, List, Dict, Set, Iterable, Iterator, Callable, TypeVar
+from typing import Iterable, Iterator, Callable, TypeVar
 A = TypeVar('A')  # pylint: disable=invalid-name
 B = TypeVar('B')  # pylint: disable=invalid-name
 
@@ -28,9 +30,8 @@ def iterate(func: Callable[[A], A], arg: A,
         arg = tmp  # type: ignore
 
 
-def flatmap(func: Callable[[Iterator[A]], Iterator[Iterator[A]]],
+def flatmap(func: Callable[[A], Iterator[A]],
             items: Iterator[A]) -> Iterator[A]:
     """Return concatenated result of mapping func over items."""
     for item in items:
         yield from func(item)
-

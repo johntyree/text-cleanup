@@ -25,6 +25,8 @@ ERROR_GROUPS = (
     'BERPD',
     'QO0',
 )
+
+
 def build_index(groups: Iterable[str]) -> Dict[str, str]:
     """Return dict from elem to group, given iter of groups of elems."""
     tmp: Dict[str, List[str]] = {}
@@ -32,6 +34,8 @@ def build_index(groups: Iterable[str]) -> Dict[str, str]:
         for letter in group:
             tmp.setdefault(letter, []).append(group)
     return {k: ''.join(v) for k, v in tmp.items()}
+
+
 PREFERRED_ERRORS = build_index(ERROR_GROUPS)
 
 
@@ -44,6 +48,8 @@ def get_valid_words(filename=None) -> Set[str]:
     # Allow any word to be capitalized, since it might start a sentence.
     valid.update(w.capitalize() for w in words if w[0].islower())
     return valid
+
+
 WORDS = get_valid_words()
 
 
@@ -101,7 +107,6 @@ def one_substitution(word: str) -> Iterable[str]:
         for newchar in alphabet:
             if newchar != letter:
                 yield word[:i] + newchar + word[i+1:]
-
 
 
 def one_error(word: str,
@@ -165,6 +170,8 @@ def cleanup(given: str, **kwargs) -> str:
     # Re-wrapped text can rejoin lines broken at hyphens, but then you have
     # extra spaces in there, e.g. "mini- mize"
     given = given.replace('- ', '-')
+
     def silent_fix(wordmatch):
         return correct_misspelling(wordmatch.group(), **kwargs)[1]
+
     return parse.TOKEN_RE.sub(silent_fix, given)

@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup  # type: ignore
 from text_cleanup.raw import cleanup
 
 
-def reformat(given: str, pretty:bool=False) -> str:
+def reformat(given: str, pretty: bool = False) -> str:
     """Return pretty-formatted version of given."""
     if pretty:
         return BeautifulSoup(given, 'html.parser').prettify()
@@ -29,7 +29,7 @@ def clean_element(xml: str, selector=':root',
         for node in element.strings
         if not node.isspace())
     if progress_iterator is None:
-        progress_iterator = lambda x: x
+        progress_iterator = lambda x: x  # noqa: E731
 
     text_iterator = map(str, nodes)
 
@@ -41,10 +41,11 @@ def clean_element(xml: str, selector=':root',
                 for text in text_iterator]
             fixed = [future.get() for future in progress_iterator(futures)]
     else:
-        fixed = progress_iterator([cleanup(t, **kwargs) for t in text_iterator])
+        fixed = progress_iterator([cleanup(t, **kwargs)
+                                   for t in text_iterator])
 
     for node, new in zip(nodes, fixed):
-        _old = node.replace_with(new)
+        node.replace_with(new)
         # Maybe show small diff here?
 
     return str(soup)

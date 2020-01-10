@@ -2,11 +2,10 @@
 # -*- coding: utf-8 -*-
 """Functions for cleaning up text, typically from bad OCR scans."""
 
-import functools
 import itertools
 import string
 
-from typing import Tuple, List, Dict, Set, Iterable, Iterator, Callable, TypeVar
+from typing import Tuple, List, Dict, Set, Iterable, TypeVar
 
 from text_cleanup import parse
 from text_cleanup import utils
@@ -70,7 +69,7 @@ def one_space(word: str) -> Iterable[str]:
 
 def one_deletion(word: str) -> Iterable[str]:
     """Yield words made by deleting a single letter from word."""
-    for i, letter in enumerate(word):
+    for i in range(len(word)):
         yield word[:i] + word[i+1:]
 
 
